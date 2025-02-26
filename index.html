@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>高新技术企业全政策计算系统</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --background: #f8f9fa;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .calculator {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .policy-group {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+        .input-group {
+            margin: 1rem 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-top: 0.3rem;
+        }
+        button {
+            background: var(--secondary);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--background);
+            border-radius: 8px;
+        }
+        .dynamic-input { display: none; }
+        .visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1 style="color: var(--primary);">高新技术企业全政策计算系统</h1>
+
+        <!-- 企业基本信息 -->
+        <div class="policy-group">
+            <h3>企业资质</h3>
+            <div class="input-group">
+                <label>企业类型</label>
+                <select id="enterpriseType">
+                    <option value="普通高企">普通高新技术企业</option>
+                    <option value="种子企业">种子企业</option>
+                    <option value="瞪羚企业">瞪羚企业</option>
+                    <option value="领军企业">领军企业</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>是否纳入省培育库？</label>
+                <select id="isInProvPool">
+                    <option value="否">否</option>
+                    <option value="是">是</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>是否科技型中小企业？</label>
+                <select id="isSME">
+                    <option value="否">否</option>
+                    <option value="是">是</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 认证信息 -->
+        <div class="policy-group">
+            <h3>认证信息</h3>
+            <div class="input-group">
+                <label>高企认定类型</label>
+                <select id="certType">
+                    <option value="首次">首次认定</option>
+                    <option value="重新认定">重新认定</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 财务数据 -->
+        <div class="policy-group">
+            <h3>财务数据（万元）</h3>
+            <div class="input-group">
+                <label>上年度研发费用</label>
+                <input type="number" id="rdCost" value="100">
+            </div>
+
+            <div class="input-group">
+                <label>本年度研发增量</label>
+                <input type="number" id="rdIncrease" value="50">
+            </div>
+
+            <div class="input-group">
+                <label>新增固定资产投资</label>
+                <input type="number" id="fixedAssets" value="0">
+            </div>
+
+            <div class="input-group">
+                <label>科技保险费用（2023-2025）</label>
+                <input type="number" id="insuranceCost" value="0">
+            </div>
+        </div>
+
+        <!-- 迁入信息 -->
+        <div class="policy-group">
+            <h3>迁入信息</h3>
+            <div class="input-group">
+                <label>是否迁入企业？</label>
+                <select id="isRelocated" onchange="toggleVisibility('relocationYear', this.value === '是')">
+                    <option value="否">否</option>
+                    <option value="是">是</option>
+                </select>
+            </div>
+
+            <div class="input-group dynamic-input" id="relocationYear">
+                <label>迁入年份</label>
+                <input type="number" id="relocateYear" min="2020" max="2024" value="2024">
+            </div>
+
+            <div class="input-group dynamic-input" id="relocationInvestment">
+                <label>迁入后新增投资</label>
+                <input type="number" id="postRelocateInvest" value="0">
+            </div>
+        </div>
+
+        <button onclick="calculate()">开始计算</button>
+        <div id="results" class="result"></div>
+    </div>
+
+<script>
+// 显示隐藏逻辑
+function toggleVisibility(elementId, visible) {
+    document.getElementById(elementId).style.display = visible ? 'block' : 'none';
+}
+
+function calculate() {
+    const inputs = {
+        type: document.getElementById('enterpriseType').value,
+        inProvPool: document.getElementById('isInProvPool').value,
+        isSME: document.getElementById('isSME').value,
+        certType: document.getElementById('certType').value,
+        rdCost: parseFloat(document.getElementById('rdCost').value),
+        rdIncrease: parseFloat(document.getElementById('rdIncrease').value),
+        fixedAssets: parseFloat(document.getElementById('fixedAssets').value),
+        insuranceCost: parseFloat(document.getElementById('insuranceCost').value),
+        isRelocated: document.getElementById('isRelocated').value,
+        relocateYear: document.getElementById('isRelocated').value === '是' ? 
+            parseInt(document.getElementById('relocateYear').value) : null,
+        postInvest: parseFloat(document.getElementById('postRelocateInvest').value)
+    };
+
+    const benefits = [
+        ...calculateCityPolicies(inputs),
+        ...calculateSanyaPolicies(inputs),
+        ...calculateProvincePolicies(inputs)
+    ];
+
+    displayResults(benefits);
+}
+
+// 科技城政策（1-5条）
+function calculateCityPolicies(inputs) {
+    let benefits = [];
+    
+    // 1. 入库培育奖励
+    if(inputs.inProvPool === '是') {
+        benefits.push({name: "科技城入库奖励", amount: 10, rule: "政策第1条"});
+    }
+
+    // 2. 重新认定奖励
+    if(inputs.certType === '重新认定') {
+        benefits.push({name: "科技城重新认定奖励", amount: 5, rule: "政策第2条"});
+    }
+
+    // 3. 研发投入奖励
+    const rdReward = Math.min(inputs.rdCost * 0.3, 50);
+    if(rdReward > 0) {
+        benefits.push({name: "科技城研发奖励", amount: rdReward, rule: `政策第3条（研发费用${inputs.rdCost}万×30%）`});
+    }
+
+    // 4. 固定资产投资奖励
+    if(inputs.fixedAssets >= 100) {
+        const reward = Math.min(inputs.fixedAssets * 0.05, 500);
+        benefits.push({name: "科技城投资奖励", amount: reward, rule: `政策第4条（投资额${inputs.fixedAssets}万×5%）`});
+    }
+
+    // 5. 科技保险补助
+    if(inputs.insuranceCost > 0) {
+        const yearFactor = {2023:1, 2024:0.8, 2025:0.6}[inputs.relocateYear] || 0;
+        const subsidy = Math.min(inputs.insuranceCost * yearFactor, 50);
+        benefits.push({name: "科技保险补助", amount: subsidy, rule: `政策第5条（${yearFactor*100}%保费补贴）`});
+    }
+
+    return benefits;
+}
+
+// 三亚市政策（6-8条）
+function calculateSanyaPolicies(inputs) {
+    let benefits = [];
+    
+    // 6. 认定奖励
+    const certReward = inputs.certType === '首次' ? 50 : 10;
+    benefits.push({name: "三亚市认定奖励", amount: certReward, rule: `政策第6条（${inputs.certType}）`});
+
+    // 7. 迁入奖励
+    if(inputs.isRelocated === '是') {
+        const currentYear = new Date().getFullYear();
+        const validity = currentYear - inputs.relocateYear;
+        let phaseReward = 0;
+        
+        if(validity === 0) {
+            phaseReward = inputs.certType === '重新认定' ? 50 : 0;
+        } else if(validity === 2) {
+            phaseReward = 20;
+        } else if(validity >= 3) {
+            phaseReward = 30;
+        }
+        
+        if(phaseReward > 0) {
+            benefits.push({name: `三亚市迁入奖励（第${validity+1}年）`, amount: phaseReward, rule: "政策第7条"});
+        }
+    }
+
+    // 8. 中小企业奖励
+    if(inputs.isSME === '是') {
+        benefits.push({name: "三亚市中小企业奖励", amount: 5, rule: "政策第8条"});
+    }
+
+    return benefits;
+}
+
+// 海南省政策（9-12条）
+function calculateProvincePolicies(inputs) {
+    let benefits = [];
+    
+    // 9. 引进奖励
+    if(inputs.isRelocated === '是') {
+        const investReward = Math.min(inputs.postInvest * 0.05, 500);
+        benefits.push({name: "海南省引进奖励", amount: investReward, rule: `政策第9条（投资额${inputs.postInvest}万×5%）`});
+    }
+
+    // 10. 入库培育奖励
+    const provRdReward = Math.min(inputs.rdIncrease * 0.25, 50);
+    if(provRdReward > 0) {
+        benefits.push({name: "海南省研发增量奖励", amount: provRdReward, rule: `政策第10条（研发增量${inputs.rdIncrease}万×25%）`});
+    }
+
+    // 11. 精英行动奖励
+    const eliteTiers = {种子企业:300, 瞪羚企业:500, 领军企业:1000};
+    if(eliteTiers[inputs.type]) {
+        benefits.push({name: "海南省精英奖励", amount: eliteTiers[inputs.type], rule: `政策第11条（${inputs.type}）`});
+    }
+
+    // 12. 研发补助
+    const scale = inputs.type === '规上工业' ? 0.3 : 0.15;
+    const maxAmount = inputs.type === '规上工业' ? 200 : 100;
+    const subsidy = Math.min(inputs.rdIncrease * scale, maxAmount);
+    if(subsidy > 0) {
+        benefits.push({name: "海南省研发补助", amount: subsidy, rule: `政策第12条（${inputs.type}×30%）`});
+    }
+
+    return benefits;
+}
+
+function displayResults(benefits) {
+    let total = 0;
+    let html = '<h3>政策支持明细</h3>';
+    
+    benefits.forEach(item => {
+        total += item.amount;
+        html += `
+        <div class="policy-item">
+            <div><strong>${item.name}</strong></div>
+            <div style="color:#666; margin-top:0.5rem;">${item.rule} - ${item.amount.toFixed(1)}万元</div>
+        </div>
+        <hr style="margin:1rem 0; border-color:#eee;">`;
+    });
+
+    html += `<h3 style="margin-top:2rem; color:var(--primary);">
+        总计可获得：<span style="color:var(--secondary);">${total.toFixed(1)}万元</span>
+    </h3>`;
+    
+    document.getElementById('results').innerHTML = html;
+}
+</script>
+</body>
+</html>
